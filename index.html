@@ -4,7 +4,54 @@
   <title>XRP Vanity Address Generator</title>
   <script src="https://unpkg.com/xrpl@2.0.0/build/xrpl-latest-min.js"></script>
   <style>
-    /* CSS styles remain the same */
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    .input-container {
+      position: relative;
+    }
+    .input-container::before {
+      content: "r";
+      position: absolute;
+      left: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+      pointer-events: none;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 5px 5px 5px 15px;
+      margin-top: 5px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    #result {
+      margin-top: 20px;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -46,7 +93,40 @@
     }
 
     generateBtn.addEventListener('click', async () => {
-      // Event listener code remains the same
+      let vanityAddress = vanityInput.value.trim();
+      const numAddresses = parseInt(numAddressesInput.value);
+
+      if (vanityAddress === '') {
+        alert('Please enter a vanity address.');
+        return;
+      }
+
+      // Prepend "r" to the vanity address prefix if it doesn't start with "r"
+      if (!vanityAddress.startsWith('r')) {
+        vanityAddress = 'r' + vanityAddress;
+      }
+
+      if (numAddresses >= 5) {
+        alert('Generating 5 or more vanity addresses may take a while.');
+      }
+
+      generateBtn.disabled = true;
+      stopBtn.disabled = false;
+      resultDiv.textContent = 'Generating vanity addresses...';
+
+      stopGeneration = false;
+      const matchingAddresses = await findMatchingAddresses(vanityAddress, numAddresses);
+
+      if (stopGeneration) {
+        resultDiv.textContent = 'Vanity address generation stopped.';
+      } else {
+        resultDiv.textContent = matchingAddresses.length > 0
+          ? matchingAddresses.map(([address, seed]) => `Address: ${address}\nSeed: ${seed}`).join('\n\n')
+          : `No addresses matching '${vanityAddress}' found.`;
+      }
+
+      generateBtn.disabled = false;
+      stopBtn.disabled = true;
     });
 
     stopBtn.addEventListener('click', () => {
